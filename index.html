@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Einmaleins-Training – Ringkampf</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e5e7eb;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .app {
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      padding: 2rem 2.5rem;
+      max-width: 720px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    h1 {
+      margin-top: 0;
+      text-align: center;
+      font-size: 1.7rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #4b5563;
+      margin-bottom: 1.2rem;
+      font-size: 0.95rem;
+    }
+    .center { text-align: center; }
+
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7280;
+      margin-top: 0.4rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+    }
+    .choice-btn {
+      padding: 0.8rem 0.6rem;
+      border-radius: 14px;
+      border: 2px solid #d1d5db;
+      background: #f9fafb;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease,
+                  border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .choice-btn.selected {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #1d4ed8;
+      box-shadow: 0 5px 15px rgba(37,99,235,0.35);
+    }
+    .choice-btn:active { transform: translateY(1px); }
+
+    .selected-info {
+      font-size: 0.85rem;
+      color: #6b7280;
+      text-align: center;
+      min-height: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .primary-btn {
+      margin-top: 0.9rem;
+      width: 100%;
+      padding: 0.7rem 1rem;
+      font-size: 1.05rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      font-weight: 600;
+      transition: transform 0.05s ease, box-shadow 0.05s ease, background 0.2s ease;
+    }
+    .primary-btn:hover { background: #1d4ed8; }
+    .primary-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .primary-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .secondary-btn {
+      margin-top: 0.4rem;
+      width: 100%;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      cursor: pointer;
+      background: #f9fafb;
+      color: #111827;
+      font-weight: 500;
+      transition: transform 0.05s ease, box-shadow 0.05s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+    .secondary-btn:hover {
+      background: #e5e7eb;
+      border-color: #9ca3af;
+    }
+    .secondary-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .hidden { display: none; }
+
+    /* Quizbereich */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #4b5563;
+      margin-top: 0.3rem;
+    }
+    .timer {
+      font-weight: 700;
+    }
+    .timer.low { color: #b91c1c; }
+
+    .equation {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin: 0.7rem 0 0.5rem;
+      text-align: center;
+    }
+    .equation input {
+      width: 5rem;
+      font-size: 1.3rem;
+      padding: 0.15rem 0.3rem;
+      text-align: center;
+      border-radius: 8px;
+      border: 2px solid #d1d5db;
+    }
+
+    .feedback {
+      min-height: 1.4rem;
+      margin-top: 0.4rem;
+      font-weight: 500;
+      text-align: center;
+    }
+    .feedback.ok { color: #15803d; }
+    .feedback.error { color: #b91c1c; }
+
+    .stats {
+      margin-top: 0.6rem;
+      font-size: 0.9rem;
+      color: #374151;
+    }
+
+    /* Arena / Ringkampf */
+    .arena-wrapper {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      border-radius: 14px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+    }
+    .arena-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      margin-bottom: 0.35rem;
+    }
+    .score {
+      font-weight: 600;
+    }
+    .arena {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .fighter {
+      font-size: 2.1rem;
+    }
+    .track {
+      display: grid;
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      gap: 0.12rem;
+      align-items: center;
+    }
+    .track-cell {
+      height: 14px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      position: relative;
+    }
+    .track-cell.mid {
+      background: #d1d5db;
+    }
+    .marker {
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fbbf24;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
+    }
+
+    #result-screen h2 {
+      margin-bottom: 0.3rem;
+    }
+    #result-summary {
+      font-size: 0.95rem;
+      color: #374151;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1>Einmaleins – Trainingskampf</h1>
+  <div class="subtitle">
+    Wähle Klasse, Aufgabentyp und Schwierigkeit.<br>
+    Löse Multiplikations- und Divisionsaufgaben gegen den „PC-Ringer“.
+  </div>
+
+  <!-- STARTSCREEN -->
+  <div id="start-screen">
+    <div class="section-title">Klasse</div>
+    <div class="choice-grid" id="grade-grid">
+      <button type="button" class="choice-btn grade-btn" data-grade="3">3. Klasse</button>
+      <button type="button" class="choice-btn grade-btn" data-grade="4">4. Klasse</button>
+    </div>
+
+    <div class="section-title">Aufgabentyp</div>
+    <div class="choice-grid" id="mode-grid">
+      <button type="button" class="choice-btn mode-btn" data-mode="normal">
+        Normales / erweitertes Einmaleins
+      </button>
+      <button type="button" class="choice-btn mode-btn" data-mode="tens">
+        10er-Einmaleins
+      </button>
+    </div>
+
+    <div class="section-title">Schwierigkeit / Zeit pro Aufgabe</div>
+    <div class="choice-grid" id="difficulty-grid">
+      <button type="button" class="choice-btn diff-btn" data-diff="extreme">
+        extrem (3&nbsp;s)
+      </button>
+      <button type="button" class="choice-btn diff-btn" data-diff="hard">
+        schwierig (5&nbsp;s)
+      </button>
+      <button type="button" class="choice-btn diff-btn" data-diff="medium">
+        mittel (10&nbsp;s)
+      </button>
+      <button type="button" class="choice-btn diff-btn" data-diff="easy">
+        einfach (20&nbsp;s)
+      </button>
+    </div>
+
+    <div class="selected-info" id="selected-info"></div>
+    <button class="primary-btn" id="start-btn" disabled>Los geht's!</button>
+  </div>
+
+  <!-- QUIZSCREEN -->
+  <div id="quiz-screen" class="hidden">
+    <div class="info-row">
+      <div id="mode-label"></div>
+      <div class="timer" id="timer-display"></div>
+    </div>
+
+    <div class="equation">
+      <span id="factor-a">3</span>
+      <span id="op">×</span>
+      <span id="factor-b">4</span>
+      &nbsp;=&nbsp;
+      <input type="number" id="answer-input" autocomplete="off">
+    </div>
+
+    <div class="center">
+      <button class="primary-btn" id="answer-btn" style="max-width:260px;margin-top:0.7rem;">
+        Antwort prüfen
+      </button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="stats">
+      Aufgaben gelöst: <span id="stat-questions">0</span><br>
+      Spieler-Punkte: <span id="stat-player">0</span> – PC-Punkte: <span id="stat-pc">0</span>
+    </div>
+
+    <div class="arena-wrapper">
+      <div class="arena-header">
+        <div class="score" id="score-text">0 : 0</div>
+        <div style="font-size:0.85rem;color:#6b7280;">
+          Richtig: ein Schritt nach rechts<br>
+          Falsch / Zeit abgelaufen: ein Schritt nach links<br>
+          4 Schritte = 1 Punkt
+        </div>
+      </div>
+      <div class="arena">
+        <div class="fighter">🤖</div>
+        <div class="track" id="track"></div>
+        <div class="fighter">🤼‍♂️</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTSCREEN -->
+  <div id="result-screen" class="hidden center">
+    <h2 id="result-title">Fertig!</h2>
+    <p id="result-summary"></p>
+    <p style="margin-top:0.8rem; font-size:0.9rem; color:#4b5563;">
+      Wenn du fertig bist, klicke auf <strong>„Fertig“</strong>, damit LearningView den Auftrag als erledigt markiert.<br>
+      Mit <strong>„Nochmals spielen“</strong> kannst du einen neuen Kampf starten.
+    </p>
+    <button class="primary-btn" id="finish-btn">Fertig</button>
+    <button class="secondary-btn" id="again-btn">Nochmals spielen</button>
+  </div>
+</div>
+
+<!-- Audio-Effekte: WAV-Dateien im Ordner audio/ -->
+<audio id="sound-correct"   src="audio/correct.wav"   preload="auto"></audio>
+<audio id="sound-error"     src="audio/error.wav"     preload="auto"></audio>
+<audio id="sound-roundwon"  src="audio/roundwon.wav"  preload="auto"></audio>
+<audio id="sound-roundlost" src="audio/roundlost.wav" preload="auto"></audio>
+<audio id="sound-gamewon"   src="audio/gamewon.wav"   preload="auto"></audio>
+<audio id="sound-youwon"    src="audio/youwon.wav"    preload="auto"></audio>
+<audio id="sound-gamelost"  src="audio/gamelost.wav"  preload="auto"></audio>
+
+<script>
+  // --- Konfiguration ---
+  const STEP_WIN = 4;      // 4 Schritte nach links/rechts = Punkt
+  const POINTS_TO_WIN = 3; // 3 Punkte = Spielende
+
+  const TIME_LIMITS = {
+    extreme: 3,
+    hard: 5,
+    medium: 10,
+    easy: 20
+  };
+
+  // --- Zustand ---
+  let selectedGrade = null;      // '3' oder '4'
+  let selectedMode = null;       // 'normal' | 'tens'
+  let selectedDifficulty = null; // 'extreme' | 'hard' | 'medium' | 'easy'
+
+  let timeLimit = 10;
+  let timeLeft = 10;
+  let timerId = null;
+
+  let currentA = 0;
+  let currentB = 0;
+  let currentResult = 0;
+  let currentOp = '×'; // '×' oder '÷'
+
+  let position = 0;      // -4..+4, 0 = Mitte
+  let playerPoints = 0;
+  let pcPoints = 0;
+  let questionsCount = 0;
+
+  let gameOver = false;
+
+  // --- DOM ---
+  const startScreen = document.getElementById('start-screen');
+  const quizScreen = document.getElementById('quiz-screen');
+  const resultScreen = document.getElementById('result-screen');
+
+  const gradeGrid = document.getElementById('grade-grid');
+  const modeGrid = document.getElementById('mode-grid');
+  const diffGrid = document.getElementById('difficulty-grid');
+  const selectedInfo = document.getElementById('selected-info');
+  const startBtn = document.getElementById('start-btn');
+
+  const modeLabel = document.getElementById('mode-label');
+  const timerDisplay = document.getElementById('timer-display');
+  const factorAEl = document.getElementById('factor-a');
+  const factorBEl = document.getElementById('factor-b');
+  const opEl = document.getElementById('op');
+  const answerInput = document.getElementById('answer-input');
+  const answerBtn = document.getElementById('answer-btn');
+  const feedbackEl = document.getElementById('feedback');
+
+  const statQuestions = document.getElementById('stat-questions');
+  const statPlayer = document.getElementById('stat-player');
+  const statPc = document.getElementById('stat-pc');
+  const scoreText = document.getElementById('score-text');
+  const trackEl = document.getElementById('track');
+
+  const resultTitle = document.getElementById('result-title');
+  const resultSummary = document.getElementById('result-summary');
+  const finishBtn = document.getElementById('finish-btn');
+  const againBtn = document.getElementById('again-btn');
+
+  // --- Audio-Helfer ---
+  function playSound(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    try {
+      el.currentTime = 0;
+      el.play().catch(() => {});
+    } catch (e) {
+      console.warn('Audio-Fehler:', e);
+    }
+  }
+
+  // --- Auswahl-Logik ---
+  gradeGrid.querySelectorAll('.grade-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const g = btn.dataset.grade;
+      selectedGrade = (selectedGrade === g) ? null : g;
+      gradeGrid.querySelectorAll('.grade-btn').forEach(b => {
+        b.classList.toggle('selected', b.dataset.grade === selectedGrade);
+      });
+      updateStartState();
+    });
+  });
+
+  modeGrid.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const m = btn.dataset.mode;
+      selectedMode = (selectedMode === m) ? null : m;
+      modeGrid.querySelectorAll('.mode-btn').forEach(b => {
+        b.classList.toggle('selected', b.dataset.mode === selectedMode);
+      });
+      updateStartState();
+    });
+  });
+
+  diffGrid.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = btn.dataset.diff;
+      selectedDifficulty = (selectedDifficulty === d) ? null : d;
+      diffGrid.querySelectorAll('.diff-btn').forEach(b => {
+        b.classList.toggle('selected', b.dataset.diff === selectedDifficulty);
+      });
+      updateStartState();
+    });
+  });
+
+  function updateStartState() {
+    if (!selectedGrade && !selectedMode && !selectedDifficulty) {
+      selectedInfo.textContent = 'Bitte Klasse, Aufgabentyp und Schwierigkeit wählen.';
+      startBtn.disabled = true;
+      return;
+    }
+    if (!selectedGrade) {
+      selectedInfo.textContent = 'Bitte eine Klasse auswählen.';
+      startBtn.disabled = true;
+      return;
+    }
+    if (!selectedMode) {
+      selectedInfo.textContent = 'Bitte einen Aufgabentyp auswählen.';
+      startBtn.disabled = true;
+      return;
+    }
+    if (!selectedDifficulty) {
+      selectedInfo.textContent = 'Bitte eine Schwierigkeit auswählen.';
+      startBtn.disabled = true;
+      return;
+    }
+
+    const gradeText = selectedGrade === '3' ? '3. Klasse' : '4. Klasse';
+    const modeText = selectedMode === 'normal'
+      ? (selectedGrade === '3'
+          ? 'Normales Einmaleins bis 10'
+          : 'Erweitertes Einmaleins bis 20 (nur ein zweistelliger Faktor)')
+      : (selectedGrade === '3'
+          ? '10er-Einmaleins (2–9 × 10)'
+          : '10er-Einmaleins (2–9 × 10, 10,20,…,90)');
+
+    let diffText = '';
+    if (selectedDifficulty === 'extreme') diffText = 'extrem (3 s)';
+    else if (selectedDifficulty === 'hard') diffText = 'schwierig (5 s)';
+    else if (selectedDifficulty === 'medium') diffText = 'mittel (10 s)';
+    else diffText = 'einfach (20 s)';
+
+    selectedInfo.textContent = `${gradeText}, ${modeText}, ${diffText}`;
+    startBtn.disabled = false;
+  }
+
+  startBtn.addEventListener('click', startGame);
+
+  function startGame() {
+    timeLimit = TIME_LIMITS[selectedDifficulty] || 10;
+    position = 0;
+    playerPoints = 0;
+    pcPoints = 0;
+    questionsCount = 0;
+    gameOver = false;
+
+    buildTrack();
+    updateTrack();
+    updateStats();
+
+    feedbackEl.textContent = '';
+    feedbackEl.className = 'feedback';
+
+    const modeText = selectedMode === 'normal'
+      ? (selectedGrade === '3'
+          ? 'Normales 1×1 bis 10'
+          : 'Erweitertes 1×1 bis 20')
+      : (selectedGrade === '3'
+          ? '10er-1×1 (2–9 × 10)'
+          : '10er-1×1 (z.B. 2–9 × 10, 4 × 30)');
+
+    modeLabel.textContent = modeText;
+
+    startScreen.classList.add('hidden');
+    resultScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+
+    nextQuestion();
+  }
+
+  // --- Aufgaben-Generator ---
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function generateMultiplicationPair() {
+    let a, b;
+    const grade3 = selectedGrade === '3';
+    const tens = selectedMode === 'tens';
+
+    if (grade3) {
+      if (!tens) {
+        // 3. Klasse, normales 1×1: beide 2–10, kein Faktor 1, nicht 10×10
+        do {
+          a = randInt(2, 10);
+          b = randInt(2, 10);
+        } while (a === 10 && b === 10);
+      } else {
+        // 3. Klasse, 10er: 2–9 × 10
+        a = randInt(2, 9);
+        b = 10;
+      }
+    } else {
+      if (!tens) {
+        // 4. Klasse, erweitertes 1×1 bis 20, genau ein zweistelliger Faktor
+        if (Math.random() < 0.5) {
+          a = randInt(10, 20);
+          b = randInt(2, 9);
+        } else {
+          a = randInt(2, 9);
+          b = randInt(10, 20);
+        }
+      } else {
+        // 4. Klasse, 10er-Einmaleins
+        if (Math.random() < 0.5) {
+          a = randInt(2, 9);
+          b = 10;
+        } else {
+          a = randInt(2, 9);
+          b = randInt(1, 9) * 10;
+        }
+      }
+    }
+    return { a, b, result: a * b };
+  }
+
+  function generateTask() {
+    const multFirst = Math.random() < 0.5; // Hälfte Multiplikation, Hälfte Division
+    const base = generateMultiplicationPair();
+
+    if (multFirst) {
+      currentOp = '×';
+      return { a: base.a, b: base.b, result: base.result, op: '×' };
+    } else {
+      // Division als Umkehraufgabe
+      const c = base.result;
+      const chooseFirst = Math.random() < 0.5;
+      let a, b, result;
+      if (chooseFirst) {
+        a = c;
+        b = base.a;
+        result = base.b;
+      } else {
+        a = c;
+        b = base.b;
+        result = base.a;
+      }
+      currentOp = '÷';
+      return { a, b, result, op: '÷' };
+    }
+  }
+
+  function nextQuestion() {
+    if (gameOver) return;
+    const t = generateTask();
+    currentA = t.a;
+    currentB = t.b;
+    currentResult = t.result;
+    currentOp = t.op;
+
+    factorAEl.textContent = currentA;
+    factorBEl.textContent = currentB;
+    opEl.textContent = ` ${currentOp} `;
+
+    answerInput.value = '';
+    answerInput.focus();
+
+    resetTimer();
+  }
+
+  // --- Timer ---
+  function resetTimer() {
+    if (timerId) clearInterval(timerId);
+    timeLeft = timeLimit;
+    updateTimerUI();
+
+    timerId = setInterval(() => {
+      timeLeft--;
+      updateTimerUI();
+      if (timeLeft <= 0) {
+        clearInterval(timerId);
+        timerId = null;
+        handleAnswer(null, true); // Timeout = falsch
+      }
+    }, 1000);
+  }
+
+  function updateTimerUI() {
+    timerDisplay.textContent = `Restzeit: ${timeLeft}s`;
+    timerDisplay.classList.toggle('low', timeLeft <= 2);
+  }
+
+  // --- Arena / Marker ---
+  function buildTrack() {
+    trackEl.innerHTML = '';
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'track-cell';
+      if (i === 4) cell.classList.add('mid');
+      trackEl.appendChild(cell);
+    }
+  }
+
+  function updateTrack() {
+    const cells = trackEl.querySelectorAll('.track-cell');
+    cells.forEach(c => {
+      const marker = c.querySelector('.marker');
+      if (marker) c.removeChild(marker);
+    });
+    const idx = position + 4; // -4..+4 -> 0..8
+    if (idx >= 0 && idx < cells.length) {
+      const marker = document.createElement('div');
+      marker.className = 'marker';
+      cells[idx].appendChild(marker);
+    }
+    scoreText.textContent = `${playerPoints} : ${pcPoints}`;
+  }
+
+  function updateStats() {
+    statQuestions.textContent = questionsCount.toString();
+    statPlayer.textContent = playerPoints.toString();
+    statPc.textContent = pcPoints.toString();
+  }
+
+  // --- Antwortbehandlung ---
+  answerBtn.addEventListener('click', () => {
+    const val = answerInput.value.trim();
+    const num = val === '' ? null : Number(val);
+    handleAnswer(num, false);
+  });
+
+  answerInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = answerInput.value.trim();
+      const num = val === '' ? null : Number(val);
+      handleAnswer(num, false);
+    }
+  });
+
+  function handleAnswer(value, isTimeout) {
+    if (gameOver) return;
+
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+
+    const correct = value === currentResult;
+    questionsCount++;
+
+    if (!isTimeout && correct) {
+      feedbackEl.textContent = 'Richtig! 👍';
+      feedbackEl.className = 'feedback ok';
+      // Richtige Antwort → correct.wav
+      playSound('sound-correct');
+      position = Math.min(position + 1, STEP_WIN);
+    } else {
+      feedbackEl.textContent = isTimeout
+        ? 'Zeit abgelaufen – ein Schritt für den PC.'
+        : 'Leider falsch – ein Schritt für den PC.';
+      feedbackEl.className = 'feedback error';
+      // Falsche Antwort / Timeout → error.wav
+      playSound('sound-error');
+      position = Math.max(position - 1, -STEP_WIN);
+    }
+
+    // Runde gewonnen / verloren?
+    if (position >= STEP_WIN) {
+      playerPoints++;
+      position = 0;
+      feedbackEl.textContent += ' Du gewinnst eine Runde!';
+      feedbackEl.className = 'feedback ok';
+      // Runde für Schüler → roundwon.wav
+      playSound('sound-roundwon');
+    } else if (position <= -STEP_WIN) {
+      pcPoints++;
+      position = 0;
+      feedbackEl.textContent += ' Der Roboter gewinnt eine Runde.';
+      feedbackEl.className = 'feedback error';
+      // Runde für Roboter → roundlost.wav
+      playSound('sound-roundlost');
+    }
+
+    updateTrack();
+    updateStats();
+
+    if (playerPoints >= POINTS_TO_WIN || pcPoints >= POINTS_TO_WIN) {
+      setTimeout(endGame, 600);
+    } else {
+      setTimeout(() => {
+        nextQuestion();
+      }, 800);
+    }
+  }
+
+  function endGame() {
+    gameOver = true;
+    if (timerId) clearInterval(timerId);
+
+    quizScreen.classList.add('hidden');
+    resultScreen.classList.remove('hidden');
+
+    const win = playerPoints > pcPoints;
+    if (win) {
+      resultTitle.textContent = 'Sieg! 🎉';
+      // Kampf gewonnen → gamewon.wav, dann youwon.wav (z.B. Sprachsample)
+      playSound('sound-gamewon');
+      setTimeout(() => {
+        playSound('sound-youwon');
+      }, 700); // ggf. an Länge der Fanfare anpassen
+    } else {
+      resultTitle.textContent = 'Niederlage 😕';
+      // Kampf verloren → gamelost.wav
+      playSound('sound-gamelost');
+    }
+
+    resultSummary.innerHTML =
+      `Du hast insgesamt <strong>${questionsCount}</strong> Aufgaben gelöst.<br>` +
+      `Punkte: <strong>Du ${playerPoints}</strong> – <strong>PC ${pcPoints}</strong>.`;
+    finishBtn.disabled = false;
+    finishBtn.textContent = 'Fertig';
+  }
+
+  // LearningView-Feedback
+  finishBtn.addEventListener('click', () => {
+    finishBtn.disabled = true;
+    finishBtn.textContent = 'Erledigt ✔';
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage('AppSolved', '*');
+      }
+    } catch (e) {
+      console.warn('LearningView-AppSolved nicht möglich:', e);
+    }
+  });
+
+  againBtn.addEventListener('click', () => {
+    resultScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+  });
+
+  // --- Init ---
+  (function init() {
+    buildTrack();
+    updateTrack();
+    updateStartState();
+  })();
+</script>
+</body>
+</html>
