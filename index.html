@@ -378,6 +378,7 @@
   let questionsCount = 0;
 
   let gameOver = false;
+  let isAnswerLocked = false; // NEU: sperrt Mehrfachantworten pro Aufgabe
 
   // --- DOM ---
   const startScreen = document.getElementById('start-screen');
@@ -506,6 +507,7 @@
     pcPoints = 0;
     questionsCount = 0;
     gameOver = false;
+    isAnswerLocked = false;
 
     buildTrack();
     updateTrack();
@@ -618,6 +620,9 @@
     answerInput.value = '';
     answerInput.focus();
 
+    isAnswerLocked = false;
+    answerBtn.disabled = false;
+
     resetTimer();
   }
 
@@ -693,6 +698,9 @@
 
   function handleAnswer(value, isTimeout) {
     if (gameOver) return;
+    if (isAnswerLocked) return;      // Mehrfachklicks ignorieren
+    isAnswerLocked = true;
+    answerBtn.disabled = true;
 
     if (timerId) {
       clearInterval(timerId);
@@ -757,11 +765,11 @@
     const win = playerPoints > pcPoints;
     if (win) {
       resultTitle.textContent = 'Sieg! 🎉';
-      // Kampf gewonnen → gamewon.wav, dann youwon.wav (z.B. Sprachsample)
+      // Kampf gewonnen → gamewon.wav, dann youwon.wav
       playSound('sound-gamewon');
       setTimeout(() => {
         playSound('sound-youwon');
-      }, 700); // ggf. an Länge der Fanfare anpassen
+      }, 700);
     } else {
       resultTitle.textContent = 'Niederlage 😕';
       // Kampf verloren → gamelost.wav
